@@ -19,7 +19,7 @@ struct TaggedUnion {
 
 
   // Const accessor for the current index.
-  index_type const &activeIndex() const { return index; }
+  inline index_type const &activeIndex() const { return index; }
 
 
   // Recursively determine the index of a particular type.
@@ -51,10 +51,11 @@ struct TaggedUnion {
   // Create a new instance of a TaggedUnion, inhabited by type T and initialized
   // with the variadic list of arguments.
   template <typename T, typename ...Args>
-  static TaggedUnion<Ts...> create(Args const &...args) {
+  static inline TaggedUnion<Ts...> create(Args const &...args) {
+    static constexpr auto index_of_T = indexOf<T>();
     TaggedUnion<Ts...> tu;
-    get<indexOf<T>()>(tu.value) = T{args...};
-    tu.index = indexOf<T>();
+    get<index_of_T>(tu.value) = T{args...};
+    tu.index = index_of_T;
     return tu;
   }
 
@@ -62,8 +63,9 @@ struct TaggedUnion {
   // Get a const reference to the T element of the Union.
   template <typename T>
   inline T const &as() const {
-    if (indexOf<T>() == activeIndex()) {
-      return get<indexOf<T>()>(value);
+    static constexpr auto index_of_T = indexOf<T>();
+    if (index == index_of_T) {
+      return get<index_of_T>(value);
     }
     throw "Attempt to access inactive TaggedUnion field";
   }
@@ -71,8 +73,9 @@ struct TaggedUnion {
   // Get a non-const reference to the T element of the Union.
   template <typename T>
   inline T &as() {
-    if (indexOf<T>() == activeIndex()) {
-      return get<indexOf<T>()>(value);
+    static constexpr auto index_of_T = indexOf<T>();
+    if (index == index_of_T) {
+      return get<index_of_T>(value);
     }
     throw "Attempt to access inactive TaggedUnion field";
   }
@@ -87,9 +90,9 @@ private:
 #define DEFINE_AUTO_TAGGED_UNION(NAME, ...)\
   struct NAME : public TaggedUnion<__VA_ARGS__> {\
     enum class Kind { __VA_ARGS__ };\
-    Kind kind() const { return static_cast<Kind>(activeIndex()); }\
+    inline Kind kind() const { return static_cast<Kind>(activeIndex()); }\
     template <typename T, typename ...Args>\
-    static NAME create(Args const &...args) {\
+    static inline NAME create(Args const &...args) {\
       return { TaggedUnion<__VA_ARGS__>::create<T>(args...) };\
     }\
   };
