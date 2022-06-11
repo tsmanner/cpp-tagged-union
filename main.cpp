@@ -3,62 +3,65 @@
 
 
 struct RelativeMove {
-    int32_t delta_x;
-    int32_t delta_y;
+  int32_t delta_x;
+  int32_t delta_y;
 };
 
 struct Button {
-    uint16_t code;
-    bool down;
+  uint16_t code;
+  bool down;
 };
 
 struct Scroll {
-    int32_t delta_x;
-    int32_t delta_y;
+  int32_t delta_x;
+  int32_t delta_y;
 };
 
 
-DEFINE_TAGGED_UNION(MouseEvent, RelativeMove, Button, Scroll);
+// Defines a new struct named MouseEvent that is a union of
+// RelativeMove, Button, and Scroll, which contains a Kind
+// enum that has a value for each alternative.
+DEFINE_AUTO_TAGGED_UNION(MouseEvent, RelativeMove, Button, Scroll);
 
 
 void examplePrintEventIndexed(MouseEvent const &event) {
-    switch (event.activeIndex()) {
+  switch (event.activeIndex()) {
     case MouseEvent::indexOf<RelativeMove>(): {
-        auto relative_move = event.as<RelativeMove>();
-        printf("move %d x %d\n", relative_move.delta_x, relative_move.delta_y);
-        break;
+      auto relative_move = event.as<RelativeMove>();
+      printf("move %d x %d\n", relative_move.delta_x, relative_move.delta_y);
+      break;
     }
     case MouseEvent::indexOf<Button>(): {
-        auto button = event.as<Button>();
-        printf("button code=%d down=%d\n", button.code, button.down);
-        break;
+      auto button = event.as<Button>();
+      printf("button code=%d down=%d\n", button.code, button.down);
+      break;
     }
     case MouseEvent::indexOf<Scroll>(): {
-        auto scroll = event.as<Scroll>();
-        printf("scroll %d x %d\n", scroll.delta_x, scroll.delta_y);
-        break;
+      auto scroll = event.as<Scroll>();
+      printf("scroll %d x %d\n", scroll.delta_x, scroll.delta_y);
+      break;
     }
-    }
+  }
 }
 
 void examplePrintEventKind(MouseEvent const &event) {
-    switch (event.kind()) {
+  switch (event.kind()) {
     case MouseEvent::Kind::RelativeMove: {
-        auto relative_move = event.as<RelativeMove>();
-        printf("move %d x %d\n", relative_move.delta_x, relative_move.delta_y);
-        break;
+      auto relative_move = event.as<RelativeMove>();
+      printf("move %d x %d\n", relative_move.delta_x, relative_move.delta_y);
+      break;
     }
     case MouseEvent::Kind::Button: {
-        auto button = event.as<Button>();
-        printf("button code=%d down=%d\n", button.code, button.down);
-        break;
+      auto button = event.as<Button>();
+      printf("button code=%d down=%d\n", button.code, button.down);
+      break;
     }
     case MouseEvent::Kind::Scroll: {
-        auto scroll = event.as<Scroll>();
-        printf("scroll %d x %d\n", scroll.delta_x, scroll.delta_y);
-        break;
+      auto scroll = event.as<Scroll>();
+      printf("scroll %d x %d\n", scroll.delta_x, scroll.delta_y);
+      break;
     }
-    }
+  }
 }
 
 int main() {
