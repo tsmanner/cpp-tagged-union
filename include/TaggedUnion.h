@@ -21,6 +21,21 @@ struct TaggedUnion {
   // Const accessor for the current index.
   inline index_type const &activeIndex() const { return index; }
 
+  // Default constructor
+  constexpr TaggedUnion() = default;
+
+  // Per variant constructors
+  template <typename T>
+  constexpr TaggedUnion(T const &alternative) {
+    constexpr auto index_of_T = indexOf<T>();
+    index = indexOf<T>();
+    get<index_of_T>(value) = alternative;
+  }
+
+
+  // Copy and Move constructors
+  constexpr TaggedUnion(TaggedUnion<Ts...> const &tagged_union): value(tagged_union.value), index(tagged_union.index) {}
+
 
   // Recursively determine the index of a particular type.
   // If the current type matches, return this INDEX value.
@@ -32,7 +47,7 @@ struct TaggedUnion {
   }
 
   // Recursively determine the index of a particular type.
-  // If the current type doesn't matche, recursively call, dropping the CurrentT
+  // If the current type doesn't match, recursively call, dropping the CurrentT
   // and incrementing INDEX
   template <typename T, std::size_t INDEX, typename CurrentT, typename ...RemainingTs>
   static constexpr inline
@@ -52,7 +67,7 @@ struct TaggedUnion {
   // with the variadic list of arguments.
   template <typename T, typename ...Args>
   static inline TaggedUnion<Ts...> create(Args const &...args) {
-    static constexpr auto index_of_T = indexOf<T>();
+    constexpr auto index_of_T = indexOf<T>();
     TaggedUnion<Ts...> tu;
     get<index_of_T>(tu.value) = T{args...};
     tu.index = index_of_T;
@@ -63,7 +78,7 @@ struct TaggedUnion {
   // Get a const reference to the T element of the Union.
   template <typename T>
   inline T const &as() const {
-    static constexpr auto index_of_T = indexOf<T>();
+    constexpr auto index_of_T = indexOf<T>();
     if (index == index_of_T) {
       return get<index_of_T>(value);
     }
@@ -73,7 +88,7 @@ struct TaggedUnion {
   // Get a non-const reference to the T element of the Union.
   template <typename T>
   inline T &as() {
-    static constexpr auto index_of_T = indexOf<T>();
+    constexpr auto index_of_T = indexOf<T>();
     if (index == index_of_T) {
       return get<index_of_T>(value);
     }
@@ -91,9 +106,14 @@ private:
   struct NAME : public TaggedUnion<__VA_ARGS__> {\
     enum class Kind { __VA_ARGS__ };\
     inline Kind kind() const { return static_cast<Kind>(activeIndex()); }\
+    /* Inherit the TaggedUnion constructors */\
+    using TaggedUnion<__VA_ARGS__>::TaggedUnion;\
+    /* Add an explicit copy-from-TaggedUnion constructor */\
+    constexpr NAME(TaggedUnion<__VA_ARGS__> const &tu): TaggedUnion(tu) {}\
+    /* Expose the create factories, yielding an instance of NAME instead of the underlying TaggedUnion */\
     template <typename T, typename ...Args>\
     static inline NAME create(Args const &...args) {\
-      return { TaggedUnion<__VA_ARGS__>::create<T>(args...) };\
+      return TaggedUnion::create<T>(args...);\
     }\
   };
 
