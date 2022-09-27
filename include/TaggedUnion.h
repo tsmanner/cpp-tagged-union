@@ -117,3 +117,9 @@ private:
     }\
   };
 
+
+#define _tagged_union_join2(a, b) a ## b
+#define _tagged_union_join(a, b) _tagged_union_join2(a, b)
+
+#define TAGGED_UNION_CASE(_CaseType, _CaseVariant, _obj, _typed) \
+    _CaseType::Kind::_CaseVariant: auto &_typed = _obj.as<_CaseVariant>(); _tagged_union_join(_dummy_label, __LINE__)

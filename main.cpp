@@ -64,6 +64,27 @@ void examplePrintEventKind(MouseEvent const &event) {
   }
 }
 
+void examplePrintEventKindWithMacro(MouseEvent const &event) {
+  // This example uses the TAGGED_UNION_CASE macro to couple the case value with
+  // the resulting type of the tagged-union value.  This removes the possibility
+  // of a runtime error where the 2 are mismatched.
+  switch (event.kind()) {
+    {
+      case TAGGED_UNION_CASE(MouseEvent, RelativeMove, event, relative_move):
+      printf("move %d x %d\n", relative_move.delta_x, relative_move.delta_y);
+      break;
+    }{
+      case TAGGED_UNION_CASE(MouseEvent, Button, event, button):
+      printf("button code=%d down=%d\n", button.code, button.down);
+      break;
+    }{
+      case TAGGED_UNION_CASE(MouseEvent, Scroll, event, scroll):
+      printf("scroll %d x %d\n", scroll.delta_x, scroll.delta_y);
+      break;
+    }
+  }
+}
+
 int main() {
   examplePrintEventIndexed(MouseEvent::create<RelativeMove>(1, 0));
   examplePrintEventIndexed(MouseEvent::create<Button>(uint16_t(123), true));
@@ -74,6 +95,9 @@ int main() {
   examplePrintEventKind(RelativeMove{1, 0});
   examplePrintEventKind(Button{uint16_t(123), true});
   examplePrintEventKind(Scroll{-2, 3});
+  examplePrintEventKindWithMacro(RelativeMove{1, 0});
+  examplePrintEventKindWithMacro(Button{uint16_t(123), true});
+  examplePrintEventKindWithMacro(Scroll{-2, 3});
   try {
     MouseEvent::create<Scroll>(-2, 3).as<Button>();
   } catch (char const *e) {
