@@ -33,3 +33,10 @@
 
 # Decompiled (objdump) files
 *.asm
+
+# VS Code
+.vscode/
+
+# zig compiler artifacts
+zig-cache/
+zig-out/
